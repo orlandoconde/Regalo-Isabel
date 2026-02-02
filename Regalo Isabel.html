@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+
+<title>Documento interactivo</title>
+
+<style>
+  body{
+    margin:0;
+    background:#f2f2f2;
+    display:flex;
+    justify-content:center;
+  }
+
+  /* contenedor de la página */
+  .pagina{
+    position:relative;
+    margin:20px 0;
+  }
+
+  /* imagen del PDF */
+  .pagina img{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+
+  /* palabras invisibles que disparan confetti */
+    .confetti-word{
+    position:absolute;
+    cursor:pointer;
+  }
+
+
+  /* canvas del confetti */
+  #fxCanvas{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:9999;
+  }
+</style>
+</head>
+
+<body>
+
+<canvas id="fxCanvas"></canvas>
+
+<div class="pagina">
+  <img src="A5 clínica_image.png" alt="Documento A5">
+
+  <!-- ZONAS CONFETTI (ajustaremos luego) -->
+  <span class="confetti-word" style="top:37%; left:26%; width:14%; height:4%;"></span>
+  </div>
+
+<script>
+const canvas = document.getElementById('fxCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth+'px';
+  canvas.style.height = window.innerHeight+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const particles = [];
+function rand(a,b){return Math.random()*(b-a)+a;}
+
+function spawnConfetti(x,y){
+  for(let i=0;i<70;i++){
+    particles.push({
+      x,y,
+      vx:rand(-3,3),
+      vy:rand(-7,-2),
+      g:0.18,
+      r:rand(3,6),
+      life:60,
+      c:`hsl(${rand(0,360)} 90% 60%)`
+    });
+  }
+}
+
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.life--;
+    p.vy+=p.g;
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c;
+    ctx.fill();
+
+    if(p.life<=0) particles.splice(i,1);
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+
+document.querySelectorAll('.confetti-word').forEach(el=>{
+  let lock=false;
+  el.addEventListener('mouseenter',e=>{
+    if(lock) return;
+    lock=true;
+    setTimeout(()=>lock=false,500);
+
+    const r=el.getBoundingClientRect();
+    spawnConfetti(
+      r.left+r.width/2,
+      r.top+r.height/2
+    );
+  });
+});
+</script>
+
+</body>
+</html>
